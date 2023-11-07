@@ -4,6 +4,7 @@ from rtcbot import RTCConnection, getRTCBotJS, CVCamera
 from aiohttp import web
 import asyncio
 import cv2
+import numpy as np
 
 routes = web.RouteTableDef()
 # settings
@@ -20,10 +21,34 @@ BAUD_RATE = 9600
 
 motorController = MotorClass(PORT, BAUD_RATE)
 
+def detect_red_dot_and_draw_contours(frame):
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    # lower_red = np.array([0, 120, 70])
+    # upper_red = np.array([10, 255, 255])
+    lower_red2 = np.array([170, 120, 70])
+    upper_red2 = np.array([180, 255, 255])
+
+    # mask1 = cv2.inRange(hsv, lower_red, upper_red)
+    red_mask = cv2.inRange(hsv, lower_red2, upper_red2)
+    # red_mask = cv2.add(mask1, mask2)
+
+    contours, _ = cv2.findContours(red_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    red_dot_detected = False
+
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > 50:  # Threshold
+            red_dot_detected = True
+            cv2.drawContours(frame, [contour], -1, (0, 255, 0), 3)  # Draw the contour on the frame
+
+    return red_dot_detected, frame
 
 def preprocess(frame):
-    # gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    # print("Done!")
+    detected, f = detect_red_dot_and_draw_contours(frame) 
+    if(detected):
+        print("Detected!!")
     return frame
 
 
@@ -67,6 +92,8 @@ def onMessage(msg):  # Called when each message is sent
         sendSignal(0, 0, 0, 0, _sucky=0)
     elif (msg == "on"):
         sendSignal(0, 0, 0, 0, _sucky=1)
+    elif (msg == "light"):
+        pass
     else:
         if ("ls=" in msg):
             leftValStraight = int(msg[3:])
