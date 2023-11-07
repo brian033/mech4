@@ -5,6 +5,11 @@ from aiohttp import web
 import asyncio
 import cv2
 import numpy as np
+import datetime
+
+
+
+
 
 routes = web.RouteTableDef()
 # settings
@@ -21,13 +26,17 @@ BAUD_RATE = 9600
 
 motorController = MotorClass(PORT, BAUD_RATE)
 
+
+lowerHSV = [170, 120, 70]
+upperHSV = [180, 255, 255]
+thershold = 500
 def detect_red_dot_and_draw_contours(frame):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
     # lower_red = np.array([0, 120, 70])
     # upper_red = np.array([10, 255, 255])
-    lower_red2 = np.array([170, 120, 70])
-    upper_red2 = np.array([180, 255, 255])
+    lower_red2 = np.array(lowerHSV)
+    upper_red2 = np.array(upperHSV)
 
     # mask1 = cv2.inRange(hsv, lower_red, upper_red)
     red_mask = cv2.inRange(hsv, lower_red2, upper_red2)
@@ -39,7 +48,7 @@ def detect_red_dot_and_draw_contours(frame):
 
     for contour in contours:
         area = cv2.contourArea(contour)
-        if area > 50:  # Threshold
+        if area > thershold:  # Threshold
             red_dot_detected = True
             cv2.drawContours(frame, [contour], -1, (0, 255, 0), 3)  # Draw the contour on the frame
 
@@ -48,8 +57,8 @@ def detect_red_dot_and_draw_contours(frame):
 def preprocess(frame):
     detected, f = detect_red_dot_and_draw_contours(frame) 
     if(detected):
-        print("Detected!!")
-    return frame
+        print(f"[{datetime.datetime.now().time()}] => Detected!!")
+    return f
 
 
 # Initialize the camera
@@ -77,6 +86,9 @@ def onMessage(msg):  # Called when each message is sent
     global rightValStraight
     global rightValTurn
     global TURNING_MULTIPLIER
+    global lowerHSV
+    global upperHSV
+    global thershold
     print(msg)
     if (msg == "up"):
         sendSignal(0, leftValStraight, 0, rightValStraight)
@@ -103,6 +115,22 @@ def onMessage(msg):  # Called when each message is sent
             rightValStraight = int(msg[3:])
             rightValTurn = min(math.floor(
                 rightValStraight * TURNING_MULTIPLIER), 255)
+        elif ("th=" in msg):
+            thershold = int(msg[3:])
+        elif ("lowerh=" in msg):
+            lowerHSV[0] = int(msg[7:])
+        elif ("lowers=" in msg):
+            lowerHSV[1] = int(msg[7:])
+        elif ("lowerv=" in msg):
+            lowerHSV[2] = int(msg[7:])
+        elif ("upperh=" in msg):
+            upperHSV[0] = int(msg[7:])
+        elif ("uppers=" in msg):
+            upperHSV[1] = int(msg[7:])
+        elif ("upperv=" in msg):
+            upperHSV[2] = int(msg[7:])
+       
+            
 
 
 # Send images from the camera through the connection

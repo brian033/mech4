@@ -6,15 +6,18 @@
     <body style="text-align: center; padding-top: 30px">
         <video autoplay playsinline muted controls></video>
         <p>Open the browser's developer tools to see console messages (CTRL+SHIFT+C)</p>
-        <button type="button" id="up">UP</button>
-        <button type="button" id="left">LEFT</button>
-        <button type="button" id="right">RIGHT</button>
-        <button type="button" id="down">DOWN</button>
-        <button type="button" id="break">BREAK</button>
-        <button type="button" id="on">ON</button>
-        <button type="button" id="off">OFF</button>
-        <input type="number" id="leftStraight" />
-        <input type="number" id="rightStraight" />
+
+        <input type="number" id="leftStraight" placeholder="leftStraight" />
+        <input type="number" id="rightStraight" placeholder="rightStraight" />
+
+        <input type="number" id="th" placeholder="th" />
+        <input type="number" id="lowerh" placeholder="lowerh" />
+        <input type="number" id="lowers" placeholder="lowers" />
+        <input type="number" id="lowerv" placeholder="lowerv" />
+        <input type="number" id="upperh" placeholder="upperh" />
+        <input type="number" id="uppers" placeholder="uppers" />
+        <input type="number" id="upperv" placeholder="upperv" />
+
         <ul>
             <li>
                 Left straight value:
@@ -34,38 +37,33 @@
                 conn.put_nowait("rs=" + e.target.value.toString());
                 document.querySelector("#rightValHolder").textContent = e.target.value.toString();
             });
-            document.querySelector("#up").onclick = function () {
-                var rs = document.querySelector("#rightStraight").valueAsNumber;
-                warn(rs);
-                conn.put_nowait(rs);
-            };
-            document.querySelector("#up").onclick = function () {
-                conn.put_nowait("up");
-            };
-            document.querySelector("#left").onclick = function () {
-                conn.put_nowait("left");
-            };
-            document.querySelector("#right").onclick = function () {
-                conn.put_nowait("right");
-            };
-            document.querySelector("#down").onclick = function () {
-                conn.put_nowait("down");
-            };
-            document.querySelector("#break").onclick = function () {
-                conn.put_nowait("break");
-            };
-            document.querySelector("#on").onclick = function () {
-                conn.put_nowait("on");
-            };
-            document.querySelector("#off").onclick = function () {
-                conn.put_nowait("off");
-            };
+            document.querySelector("#lowerh").addEventListener("change", (e) => {
+                conn.put_nowait("lowerh=" + e.target.value.toString());
+            });
+            document.querySelector("#lowers").addEventListener("change", (e) => {
+                conn.put_nowait("lowers=" + e.target.value.toString());
+            });
+            document.querySelector("#lowerv").addEventListener("change", (e) => {
+                conn.put_nowait("lowerv=" + e.target.value.toString());
+            });
+            document.querySelector("#th").addEventListener("change", (e) => {
+                conn.put_nowait("th=" + e.target.value.toString());
+            });
+            document.querySelector("#upperh").addEventListener("change", (e) => {
+                conn.put_nowait("upperh=" + e.target.value.toString());
+            });
+            document.querySelector("#uppers").addEventListener("change", (e) => {
+                conn.put_nowait("uppers=" + e.target.value.toString());
+            });
+            document.querySelector("#upperv").addEventListener("change", (e) => {
+                conn.put_nowait("upperv=" + e.target.value.toString());
+            });
+
             let keyIsPressed = false;
             document.addEventListener("keydown", function (event) {
+                console.log("Key down:", event.keyCode, event.key);
                 // Display the pressed key code and the key itself
                 if (!keyIsPressed) {
-                    keyIsPressed = true;
-                    console.log("Key down:", event.keyCode, event.key);
                     if (event.keyCode == 87) {
                         conn.put_nowait("up");
                     } else if (event.keyCode == 65) {
@@ -83,14 +81,19 @@
                     } else if (event.keyCode == 80) {
                         // off
                         conn.put_nowait("off");
+                    } else {
+                        return;
                     }
+                    keyIsPressed = true;
                 }
             });
             document.addEventListener("keyup", function (event) {
                 // Display the pressed key code and the key itself
-                keyIsPressed = false;
-                console.log("Key up:", event.keyCode, event.key);
-                conn.put_nowait("break");
+                if (keyIsPressed) {
+                    keyIsPressed = false;
+                    console.log("Key up:", event.keyCode, event.key);
+                    conn.put_nowait("break");
+                }
             });
 
             var conn = new rtcbot.RTCConnection();
